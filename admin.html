@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="id">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#090b10"><title>Admin — BunnyVid</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header class="topbar"><a class="brand" href="./"><span class="brand-mark">▶</span><span>BUNNY<span class="brand-light">VID</span></span></a><div class="top-actions" style="margin-left:auto"><a class="nav-link" href="./">← Lihat situs</a></div></header>
+<main class="page-wrap">
+  <a class="back-link" href="./">← Kembali ke beranda</a>
+  <h1 class="page-title">Panel <span style="color:var(--accent)">admin.</span></h1>
+  <p class="page-subtitle">Kelola katalog video dari HP. Jangan bagikan password admin kepada orang lain.</p>
+  <section class="panel" id="loginPanel">
+    <h2>Akses admin</h2><p>Password ini harus sama dengan secret <code>ADMIN_PASSWORD</code> di Cloudflare Worker.</p>
+    <div class="field"><label for="password">Password admin</label><input id="password" type="password" autocomplete="current-password" placeholder="Masukkan password"></div>
+    <button class="action-btn" id="loginBtn">Lanjutkan</button><div id="loginNotice" class="notice hidden"></div>
+  </section>
+  <div id="adminArea" class="hidden">
+    <section class="panel">
+      <h2>Tambah video</h2><p>Form ini mengirim file video ke Worker. Kalau upload 50–100 MB gagal, backend perlu memakai direct upload R2/presigned URL.</p>
+      <form id="uploadForm">
+        <div class="field"><label for="title">Judul video *</label><input id="title" required maxlength="160" placeholder="Contoh: Film favorit"></div>
+        <div class="form-grid"><div class="field"><label for="category">Kategori</label><input id="category" placeholder="Film, dokumenter, dll."></div><div class="field"><label for="year">Tahun / label</label><input id="year" placeholder="2026"></div></div>
+        <div class="field"><label for="description">Deskripsi</label><textarea id="description" placeholder="Deskripsi singkat..."></textarea></div>
+        <div class="field"><label for="thumbnail">URL thumbnail (opsional)</label><input id="thumbnail" type="url" placeholder="https://..."></div>
+        <div class="field"><label for="videoFile">File video *</label><input id="videoFile" type="file" accept="video/*,.mp4,.webm,.mov,.m4v" required></div>
+        <div id="uploadProgress" class="notice hidden"></div>
+        <button id="uploadBtn" class="action-btn" type="submit">Upload video</button>
+      </form>
+    </section>
+    <section class="panel"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><h2>Katalog saat ini</h2><p>Daftar yang dibaca dari Worker.</p></div><button id="reloadBtn" class="action-btn secondary-btn" type="button">Muat ulang</button></div><div id="catalogNotice" class="notice hidden"></div><div id="adminList" class="admin-list"></div></section>
+  </div>
+</main>
+<script src="config.js"></script><script src="admin.js"></script>
+</body></html>
