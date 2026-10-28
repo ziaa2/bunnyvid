@@ -5,5 +5,5 @@
   2) Jangan masukkan password admin di file ini.
 */
 window.BUNNYVID_CONFIG = {
-  WORKER_URL: "https://GANTI-DENGAN-URL-WORKER-ELU"
+  WORKER_URL: "https://ruangtonton-api.almirasyanha.workers.dev/"
 };
