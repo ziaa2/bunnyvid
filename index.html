@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shorts</title>
+<style>
+  :root{--bg:#f6f6f4;--fg:#1a1a1a;--muted:#6b6b6b;--card:#e4e4e0;--accent:#1a1a1a;--accent-fg:#fff}
+  @media (prefers-color-scheme:dark){:root{--bg:#101010;--fg:#f2f2f2;--muted:#9a9a9a;--card:#1d1d1d;--accent:#f2f2f2;--accent-fg:#101010}}
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+  main{max-width:640px;margin:0 auto;padding:8px 8px 32px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .item{position:relative;aspect-ratio:9/16;background:var(--card);border-radius:8px;overflow:hidden;cursor:pointer}
+  .item video{width:100%;height:100%;object-fit:cover;display:block}
+  .item .t{position:absolute;left:0;right:0;bottom:0;padding:24px 8px 8px;color:#fff;font-size:13px;line-height:1.3;background:linear-gradient(transparent,rgba(0,0,0,.65));pointer-events:none;transition:opacity .2s}
+  .item.playing .t{opacity:0}
+  .item .p{position:absolute;inset:0;margin:auto;width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.5);pointer-events:none;transition:opacity .2s}
+  .item .p::after{content:"";position:absolute;left:17px;top:12px;border-left:16px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent}
+  .item.playing .p{opacity:0}
+  nav{display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap;margin-top:20px}
+  nav button{min-width:40px;height:40px;padding:0 12px;border:0;border-radius:8px;background:var(--card);color:var(--fg);font:inherit;cursor:pointer}
+  nav button[aria-current="page"]{background:var(--accent);color:var(--accent-fg);font-weight:600}
+  nav button:disabled{opacity:.4;cursor:default}
+  button:focus-visible,.item:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+  .msg{text-align:center;color:var(--muted);padding:48px 0}
+</style>
+</head>
+<body>
+<main>
+  <div class="grid" id="grid"></div>
+  <nav id="pager" aria-label="Halaman"></nav>
+  <p class="msg" id="msg" hidden></p>
+</main>
+<script>
+const PER_PAGE = 20;
+const grid = document.getElementById('grid');
+const pager = document.getElementById('pager');
+const msg = document.getElementById('msg');
+let videos = [];
+let current = null;
+
+// lazy load: video baru dimuat saat mendekati layar
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    const v = e.target;
+    if (e.isIntersecting) {
+      if (!v.src) { v.src = v.dataset.src; v.load(); }
+    }
+  });
+}, { rootMargin: '300px' });
+
+function getPage() {
+  const p = parseInt(new URLSearchParams(location.search).get('page'), 10);
+  const total = Math.max(1, Math.ceil(videos.length / PER_PAGE));
+  return Math.min(Math.max(p || 1, 1), total);
+}
+
+function stopCurrent() {
+  if (current) { current.pause(); current.parentElement.classList.remove('playing'); current = null; }
+}
+
+function render() {
+  stopCurrent();
+  const page = getPage();
+  const total = Math.ceil(videos.length / PER_PAGE);
+  grid.innerHTML = '';
+  videos.slice((page - 1) * PER_PAGE, page * PER_PAGE).forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'item';
+    el.tabIndex = 0;
+    el.setAttribute('role', 'button');
+    el.setAttribute('aria-label', 'Putar ' + (item.title || 'video'));
+    const v = document.createElement('video');
+    v.dataset.src = item.url;
+    v.preload = 'metadata';
+    v.loop = true;
+    v.playsInline = true;
+    v.setAttribute('playsinline', '');
+    if (item.thumbnail) v.poster = item.thumbnail;
+    const t = document.createElement('div'); t.className = 't'; t.textContent = item.title || '';
+    const p = document.createElement('div'); p.className = 'p';
+    el.append(v, t, p);
+    const toggle = () => {
+      if (current === v) { stopCurrent(); return; }
+      stopCurrent();
+      v.play().then(() => { current = v; el.classList.add('playing'); }).catch(() => {});
+    };
+    el.addEventListener('click', toggle);
+    el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+    grid.appendChild(el);
+    io.observe(v);
+  });
+  renderPager(page, total);
+  window.scrollTo(0, 0);
+}
+
+function renderPager(page, total) {
+  pager.innerHTML = '';
+  if (total <= 1) return;
+  const btn = (label, p, opts = {}) => {
+    const b = document.createElement('button');
+    b.textContent = label;
+    if (opts.disabled) b.disabled = true;
+    if (opts.current) b.setAttribute('aria-current', 'page');
+    b.addEventListener('click', () => go(p));
+    pager.appendChild(b);
+  };
+  btn('Sebelumnya', page - 1, { disabled: page === 1 });
+  // tampilkan maksimal 5 nomor di sekitar halaman aktif
+  let start = Math.max(1, page - 2), end = Math.min(total, start + 4);
+  start = Math.max(1, end - 4);
+  for (let i = start; i <= end; i++) btn(String(i), i, { current: i === page });
+  btn('Berikutnya', page + 1, { disabled: page === total });
+}
+
+function go(p) {
+  history.pushState(null, '', p === 1 ? location.pathname : '?page=' + p);
+  render();
+}
+window.addEventListener('popstate', render);
+
+fetch('videos.json')
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(data => {
+    videos = Array.isArray(data) ? data : (data.videos || []);
+    if (!videos.length) { msg.hidden = false; msg.textContent = 'Belum ada video. Tambahkan link di videos.json.'; return; }
+    render();
+  })
+  .catch(() => { msg.hidden = false; msg.textContent = 'Gagal memuat videos.json. Buka lewat GitHub Pages atau server lokal, bukan file://.'; });
+</script>
+</body>
+</html>
