@@ -120,14 +120,37 @@ function go(p) {
 }
 window.addEventListener('popstate', render);
 
-fetch('videos.json')
-  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-  .then(data => {
-    videos = Array.isArray(data) ? data : (data.videos || []);
-    if (!videos.length) { msg.hidden = false; msg.textContent = 'Belum ada video. Tambahkan link di videos.json.'; return; }
+// Baca videos.txt: satu baris = satu link. Boleh "Judul | link". Baris berawalan # diabaikan.
+// Baris paling bawah = video terbaru = tampil paling atas.
+function parseTxt(text) {
+  return text.split(/\r?\n/).map(l => l.trim()).filter(l => l && !l.startsWith('#')).map(l => {
+    const k = l.indexOf('|');
+    if (k > -1 && !/^https?:/i.test(l.slice(0, k).trim())) {
+      return { title: l.slice(0, k).trim(), url: l.slice(k + 1).trim() };
+    }
+    return { url: l };
+  }).filter(v => /^https?:\/\//i.test(v.url));
+}
+
+async function loadVideos() {
+  try {
+    const r = await fetch('videos.txt', { cache: 'no-cache' });
+    if (r.ok) return parseTxt(await r.text());
+  } catch (e) {}
+  // cadangan: videos.json lama
+  const r = await fetch('videos.json', { cache: 'no-cache' });
+  if (!r.ok) throw new Error(r.status);
+  const d = await r.json();
+  return Array.isArray(d) ? d : (d.videos || []);
+}
+
+loadVideos()
+  .then(list => {
+    videos = list.reverse(); // terbaru (paling bawah di file) jadi paling atas
+    if (!videos.length) { msg.hidden = false; msg.textContent = 'Belum ada video. Tambahkan link di videos.txt.'; return; }
     render();
   })
-  .catch(() => { msg.hidden = false; msg.textContent = 'Gagal memuat videos.json. Buka lewat GitHub Pages atau server lokal, bukan file://.'; });
+  .catch(() => { msg.hidden = false; msg.textContent = 'Gagal memuat daftar video. Buka lewat GitHub Pages atau server lokal, bukan file://.'; });
 </script>
 </body>
 </html>

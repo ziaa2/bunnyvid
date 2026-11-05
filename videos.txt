@@ -1,0 +1,49 @@
+# Satu baris = satu link video (direct link .mp4)
+# Mau pakai judul: Judul | https://link.mp4
+# Tambah video baru di PALING BAWAH, otomatis tampil paling atas.
+
+Video contoh 1 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 2 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 3 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 4 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 5 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 6 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 7 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 8 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 9 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 10 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 11 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 12 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 13 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 14 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 15 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 16 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 17 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 18 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 19 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 20 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 21 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 22 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 23 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 24 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 25 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 26 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 27 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 28 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 29 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 30 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 31 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 32 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 33 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 34 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 35 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 36 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 37 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 38 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 39 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 40 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 41 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 42 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 43 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 44 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+Video contoh 45 | https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
