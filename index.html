@@ -3,52 +3,134 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Shorts</title>
+<title>BunnyVid</title>
+<meta name="description" content="BunnyVid, kumpulan video pendek.">
+<meta name="theme-color" content="#d63a63">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg fill='%23d63a63'%3E%3Cellipse cx='11' cy='8' rx='3.2' ry='7'/%3E%3Cellipse cx='21' cy='8' rx='3.2' ry='7'/%3E%3Crect x='3' y='11' width='26' height='19' rx='9'/%3E%3C/g%3E%3Cpath d='M13.5 15.5v10l8-5z' fill='%23fff'/%3E%3C/svg%3E">
 <style>
-  :root{--bg:#f6f6f4;--fg:#1a1a1a;--muted:#6b6b6b;--card:#e4e4e0;--accent:#1a1a1a;--accent-fg:#fff}
-  @media (prefers-color-scheme:dark){:root{--bg:#101010;--fg:#f2f2f2;--muted:#9a9a9a;--card:#1d1d1d;--accent:#f2f2f2;--accent-fg:#101010}}
+  :root{
+    --bg:#f6f6f4;--fg:#1a1a1a;--muted:#6b6b6b;--card:#e4e4e0;--line:rgba(0,0,0,.08);
+    --accent:#1a1a1a;--accent-fg:#fff;
+    --brand:#d63a63;--brand-fg:#fff;
+    --head:rgba(246,246,244,.88);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#101010;--fg:#f2f2f2;--muted:#9a9a9a;--card:#1d1d1d;--line:rgba(255,255,255,.1);
+      --accent:#f2f2f2;--accent-fg:#101010;
+      --brand:#ff7a9c;--brand-fg:#101010;
+      --head:rgba(16,16,16,.88);
+    }
+  }
   *{box-sizing:border-box;margin:0}
+  html{scroll-padding-top:64px}
   body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh}
-  main{max-width:640px;margin:0 auto;padding:8px 8px 32px}
+
+  /* header */
+  .top{position:sticky;top:0;z-index:10;background:var(--head);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .top .in{max-width:640px;margin:0 auto;padding:0 12px;height:56px;display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:8px;color:var(--fg);text-decoration:none;font-size:22px;font-weight:800;letter-spacing:-.03em}
+  .logo{width:28px;height:28px;color:var(--brand);flex:none}
+  .count{font-size:13px;color:var(--muted)}
+
+  main{max-width:640px;margin:0 auto;padding:12px 8px 40px}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .item{position:relative;aspect-ratio:9/16;background:var(--card);border-radius:8px;overflow:hidden;cursor:pointer}
+
+  /* kartu video */
+  .item{position:relative;aspect-ratio:9/16;background:var(--card);border-radius:8px;overflow:hidden}
   .item video{width:100%;height:100%;object-fit:cover;display:block}
-  .item .t{position:absolute;left:0;right:0;bottom:0;padding:24px 8px 8px;color:#fff;font-size:13px;line-height:1.3;background:linear-gradient(transparent,rgba(0,0,0,.65));pointer-events:none;transition:opacity .2s}
+  .item video:fullscreen{object-fit:contain;background:#000}
+  .item video:-webkit-full-screen{object-fit:contain;background:#000}
+  .hit{position:absolute;inset:0;z-index:1;width:100%;height:100%;border:0;background:transparent;cursor:pointer;border-radius:inherit}
+  .item .t{position:absolute;left:0;right:0;bottom:0;padding:24px 8px 10px;color:#fff;font-size:13px;line-height:1.3;background:linear-gradient(transparent,rgba(0,0,0,.65));pointer-events:none;transition:opacity .2s}
+  .item .t:empty{display:none}
   .item.playing .t{opacity:0}
   .item .p{position:absolute;inset:0;margin:auto;width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.5);pointer-events:none;transition:opacity .2s}
   .item .p::after{content:"";position:absolute;left:17px;top:12px;border-left:16px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent}
   .item.playing .p{opacity:0}
-  nav{display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap;margin-top:20px}
-  nav button{min-width:40px;height:40px;padding:0 12px;border:0;border-radius:8px;background:var(--card);color:var(--fg);font:inherit;cursor:pointer}
-  nav button[aria-current="page"]{background:var(--accent);color:var(--accent-fg);font-weight:600}
+
+  /* tombol suara & layar penuh, muncul saat video diputar */
+  .ctl{position:absolute;top:8px;right:8px;z-index:2;display:flex;gap:6px;opacity:0;visibility:hidden;transition:opacity .2s}
+  .item.playing .ctl{opacity:1;visibility:visible}
+  .ctl button{width:34px;height:34px;border:0;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:grid;place-items:center;cursor:pointer}
+  .ctl svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .grid .i-off{display:none}
+  .grid.is-muted .i-on{display:none}
+  .grid.is-muted .i-off{display:block}
+
+  /* progres */
+  .bar{position:absolute;left:0;right:0;bottom:0;height:3px;z-index:2;background:var(--brand);transform:scaleX(var(--pr,0));transform-origin:left;opacity:0;pointer-events:none}
+  .item.playing .bar{opacity:1}
+
+  /* video gagal dimuat */
+  .err{position:absolute;inset:0;z-index:3;display:none;align-items:center;justify-content:center;text-align:center;padding:16px;font-size:13px;line-height:1.4;color:var(--muted);background:var(--card)}
+  .item.bad .err{display:flex}
+
+  /* halaman */
+  nav{display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap;margin-top:24px}
+  nav button{min-width:40px;height:40px;padding:0 14px;border:0;border-radius:8px;background:var(--card);color:var(--fg);font:inherit;cursor:pointer}
+  nav button[aria-current="page"]{background:var(--brand);color:var(--brand-fg);font-weight:700}
   nav button:disabled{opacity:.4;cursor:default}
-  button:focus-visible,.item:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
-  .msg{text-align:center;color:var(--muted);padding:48px 0}
+  .status{text-align:center;color:var(--muted);font-size:13px;margin-top:12px}
+
+  button:focus-visible,.hit:focus-visible,a:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+  .hit:focus-visible{outline-offset:-3px}
+  .msg{text-align:center;color:var(--muted);padding:48px 0;line-height:1.5}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
+<header class="top">
+  <div class="in">
+    <a class="brand" href="./" id="home" aria-label="BunnyVid, ke halaman pertama">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+        <ellipse cx="11" cy="8" rx="3.2" ry="7" fill="currentColor"/>
+        <ellipse cx="21" cy="8" rx="3.2" ry="7" fill="currentColor"/>
+        <rect x="3" y="11" width="26" height="19" rx="9" fill="currentColor"/>
+        <path d="M13.5 15.5v10l8-5z" fill="#fff"/>
+      </svg>
+      <span>BunnyVid</span>
+    </a>
+    <span class="count" id="count"></span>
+  </div>
+</header>
 <main>
   <div class="grid" id="grid"></div>
   <nav id="pager" aria-label="Halaman"></nav>
+  <p class="status" id="status" aria-live="polite"></p>
   <p class="msg" id="msg" hidden></p>
 </main>
 <script>
-const PER_PAGE = 20;
+const PER_PAGE = 10;
 const grid = document.getElementById('grid');
 const pager = document.getElementById('pager');
 const msg = document.getElementById('msg');
+const statusEl = document.getElementById('status');
+const countEl = document.getElementById('count');
 let videos = [];
 let current = null;
+let muted = false;
+
+const ICON_SOUND = '<svg class="i-on" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>'
+                 + '<svg class="i-off" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6"/><path d="m21 9-5 6"/></svg>';
+const ICON_FULL = '<svg viewBox="0 0 24 24"><path d="M4 9V4h5"/><path d="M20 9V4h-5"/><path d="M4 15v5h5"/><path d="M20 15v5h-5"/></svg>';
+
+// iOS tidak menampilkan frame awal kecuali ada #t=
+const withFrame = u => u.includes('#') ? u : u + '#t=0.1';
+
+function loadSrc(v) {
+  if (!v.getAttribute('src')) { v.src = withFrame(v.dataset.src); v.load(); }
+}
 
 // lazy load: video baru dimuat saat mendekati layar
-const io = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    const v = e.target;
-    if (e.isIntersecting) {
-      if (!v.src) { v.src = v.dataset.src; v.load(); }
-    }
-  });
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) loadSrc(e.target); });
 }, { rootMargin: '300px' });
+
+// video yang sedang diputar otomatis berhenti kalau keluar layar
+const ioPlay = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (!e.isIntersecting && e.target === current) stopCurrent(); });
+}, { threshold: 0.2 });
 
 function getPage() {
   const p = parseInt(new URLSearchParams(location.search).get('page'), 10);
@@ -60,37 +142,85 @@ function stopCurrent() {
   if (current) { current.pause(); current.parentElement.classList.remove('playing'); current = null; }
 }
 
+function buildItem(item) {
+  const el = document.createElement('div');
+  el.className = 'item';
+
+  const v = document.createElement('video');
+  v.dataset.src = item.url;
+  v.preload = 'metadata';
+  v.loop = true;
+  v.muted = muted;
+  v.playsInline = true;
+  v.setAttribute('playsinline', '');
+  if (item.thumbnail) v.poster = item.thumbnail;
+
+  const hit = document.createElement('button');
+  hit.type = 'button';
+  hit.className = 'hit';
+  hit.setAttribute('aria-label', 'Putar ' + (item.title || 'video'));
+
+  const t = document.createElement('div'); t.className = 't'; t.textContent = item.title || '';
+  const p = document.createElement('div'); p.className = 'p';
+  const bar = document.createElement('div'); bar.className = 'bar';
+  const err = document.createElement('div'); err.className = 'err';
+  err.textContent = 'Video tidak bisa dimuat. Cek link-nya di videos.txt.';
+
+  const ctl = document.createElement('div'); ctl.className = 'ctl';
+  const bMute = document.createElement('button');
+  bMute.type = 'button'; bMute.setAttribute('aria-label', 'Suara hidup atau mati'); bMute.innerHTML = ICON_SOUND;
+  const bFull = document.createElement('button');
+  bFull.type = 'button'; bFull.setAttribute('aria-label', 'Layar penuh'); bFull.innerHTML = ICON_FULL;
+  ctl.append(bMute, bFull);
+
+  el.append(v, t, p, bar, err, hit, ctl);
+
+  const toggle = () => {
+    if (el.classList.contains('bad')) return;
+    if (current === v) { stopCurrent(); return; }
+    stopCurrent();
+    loadSrc(v);
+    v.muted = muted;
+    v.play().then(() => { current = v; el.classList.add('playing'); }).catch(() => {});
+  };
+  hit.addEventListener('click', toggle);
+
+  bMute.addEventListener('click', () => {
+    muted = !muted;
+    grid.classList.toggle('is-muted', muted);
+    grid.querySelectorAll('video').forEach(x => { x.muted = muted; });
+  });
+  bFull.addEventListener('click', () => {
+    if (v.requestFullscreen) v.requestFullscreen().catch(() => {});
+    else if (v.webkitEnterFullscreen) v.webkitEnterFullscreen();
+  });
+
+  v.addEventListener('timeupdate', () => {
+    if (v.duration) el.style.setProperty('--pr', v.currentTime / v.duration);
+  });
+  v.addEventListener('error', () => {
+    if (v.getAttribute('src')) { el.classList.add('bad'); el.classList.remove('playing'); if (current === v) current = null; }
+  });
+  v.addEventListener('fullscreenchange', () => { v.controls = document.fullscreenElement === v; });
+
+  return { el, v };
+}
+
 function render() {
   stopCurrent();
+  io.disconnect(); ioPlay.disconnect();
   const page = getPage();
   const total = Math.ceil(videos.length / PER_PAGE);
   grid.innerHTML = '';
   videos.slice((page - 1) * PER_PAGE, page * PER_PAGE).forEach(item => {
-    const el = document.createElement('div');
-    el.className = 'item';
-    el.tabIndex = 0;
-    el.setAttribute('role', 'button');
-    el.setAttribute('aria-label', 'Putar ' + (item.title || 'video'));
-    const v = document.createElement('video');
-    v.dataset.src = item.url;
-    v.preload = 'metadata';
-    v.loop = true;
-    v.playsInline = true;
-    v.setAttribute('playsinline', '');
-    if (item.thumbnail) v.poster = item.thumbnail;
-    const t = document.createElement('div'); t.className = 't'; t.textContent = item.title || '';
-    const p = document.createElement('div'); p.className = 'p';
-    el.append(v, t, p);
-    const toggle = () => {
-      if (current === v) { stopCurrent(); return; }
-      stopCurrent();
-      v.play().then(() => { current = v; el.classList.add('playing'); }).catch(() => {});
-    };
-    el.addEventListener('click', toggle);
-    el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+    const { el, v } = buildItem(item);
     grid.appendChild(el);
     io.observe(v);
+    ioPlay.observe(v);
   });
+  grid.classList.toggle('is-muted', muted);
+  document.title = page > 1 ? 'BunnyVid, halaman ' + page : 'BunnyVid';
+  statusEl.textContent = total > 1 ? 'Halaman ' + page + ' dari ' + total : '';
   renderPager(page, total);
   window.scrollTo(0, 0);
 }
@@ -120,6 +250,25 @@ function go(p) {
 }
 window.addEventListener('popstate', render);
 
+// logo/judul: balik ke halaman 1 tanpa reload
+document.getElementById('home').addEventListener('click', e => {
+  if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+  e.preventDefault();
+  if (getPage() !== 1 || location.search) go(1); else window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// panah kiri/kanan untuk ganti halaman
+document.addEventListener('keydown', e => {
+  if (e.altKey || e.ctrlKey || e.metaKey || document.fullscreenElement) return;
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  const page = getPage(), total = Math.ceil(videos.length / PER_PAGE);
+  if (e.key === 'ArrowRight' && page < total) go(page + 1);
+  if (e.key === 'ArrowLeft' && page > 1) go(page - 1);
+});
+
+// pause saat pindah tab
+document.addEventListener('visibilitychange', () => { if (document.hidden) stopCurrent(); });
+
 // Baca videos.txt: satu baris = satu link. Boleh "Judul | link". Baris berawalan # diabaikan.
 // Baris paling bawah = video terbaru = tampil paling atas.
 function parseTxt(text) {
@@ -130,6 +279,13 @@ function parseTxt(text) {
     }
     return { url: l };
   }).filter(v => /^https?:\/\//i.test(v.url));
+}
+
+// link ganda dibuang, yang dipakai kemunculan paling bawah
+function dedupe(list) {
+  const m = new Map();
+  list.forEach(v => { m.delete(v.url); m.set(v.url, v); });
+  return [...m.values()];
 }
 
 async function loadVideos() {
@@ -146,7 +302,8 @@ async function loadVideos() {
 
 loadVideos()
   .then(list => {
-    videos = list.reverse(); // terbaru (paling bawah di file) jadi paling atas
+    videos = dedupe(list).reverse(); // terbaru (paling bawah di file) jadi paling atas
+    countEl.textContent = videos.length + ' video';
     if (!videos.length) { msg.hidden = false; msg.textContent = 'Belum ada video. Tambahkan link di videos.txt.'; return; }
     render();
   })
