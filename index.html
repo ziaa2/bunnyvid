@@ -76,6 +76,39 @@
   button:focus-visible,.hit:focus-visible,a:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
   .hit:focus-visible{outline-offset:-3px}
   .msg{text-align:center;color:var(--muted);padding:48px 0;line-height:1.5}
+
+  [hidden]{display:none!important}
+
+  /* tab Video / Foto */
+  .tabs{display:flex;width:max-content;margin:0 auto 12px;padding:3px;gap:3px;background:var(--card);border-radius:10px}
+  .tabs button{height:34px;min-width:84px;padding:0 16px;border:0;border-radius:8px;background:transparent;color:var(--muted);font:inherit;font-size:14px;cursor:pointer}
+  .tabs button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);font-weight:600}
+
+  /* galeri foto: 2 kolom, tinggi mengikuti gambar */
+  .gallery{column-count:2;column-gap:8px}
+  .ph{position:relative;display:block;width:100%;margin:0 0 8px;padding:0;border:0;border-radius:8px;overflow:hidden;background:var(--card);cursor:pointer;break-inside:avoid;color:inherit;font:inherit}
+  .ph img{display:block;width:100%;height:auto}
+  .ph.loading{aspect-ratio:3/4}
+  .ph .cap{position:absolute;left:0;right:0;bottom:0;padding:24px 8px 8px;color:#fff;font-size:13px;line-height:1.3;text-align:left;background:linear-gradient(transparent,rgba(0,0,0,.65));pointer-events:none}
+  .ph.bad{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;cursor:default}
+  .ph.bad img,.ph.bad .cap{display:none}
+  .ph.bad::after{content:"Gambar tidak bisa dimuat. Cek link-nya di photos.txt.";padding:16px;text-align:center;font-size:13px;line-height:1.4;color:var(--muted)}
+
+  /* viewer foto layar penuh */
+  .lb{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;background:#000;color:#fff}
+  .lb-top{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;font-size:14px}
+  .lb-top .r{display:flex;align-items:center;gap:8px}
+  .lb a{color:#fff;font-size:14px;padding:8px 12px;border-radius:8px;background:rgba(255,255,255,.14);text-decoration:none}
+  .lb button{border:0;color:#fff;cursor:pointer}
+  .lb-x{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.14);display:grid;place-items:center}
+  .lb svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .lb-stage{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;touch-action:pan-y}
+  .lb-stage img{max-width:100%;max-height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none}
+  .lb-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.14);display:grid;place-items:center}
+  .lb-nav.prev{left:8px}.lb-nav.next{right:8px}
+  .lb-nav:disabled{opacity:.25;cursor:default}
+  .lb-cap{padding:10px 16px calc(14px + env(safe-area-inset-bottom,0px));text-align:center;font-size:14px;line-height:1.4;min-height:20px}
+  .lb button:focus-visible,.lb a:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -95,19 +128,50 @@
   </div>
 </header>
 <main>
+  <div class="tabs" role="group" aria-label="Jenis konten">
+    <button type="button" data-tab="video" aria-pressed="true">Video</button>
+    <button type="button" data-tab="foto" aria-pressed="false">Foto</button>
+  </div>
   <div class="grid" id="grid"></div>
+  <div class="gallery" id="gallery" hidden></div>
   <nav id="pager" aria-label="Halaman"></nav>
   <p class="status" id="status" aria-live="polite"></p>
   <p class="msg" id="msg" hidden></p>
 </main>
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Foto" hidden>
+  <div class="lb-top">
+    <span id="lbCount"></span>
+    <div class="r">
+      <a id="lbOpen" href="#" target="_blank" rel="noopener">Buka asli</a>
+      <button type="button" class="lb-x" id="lbClose" aria-label="Tutup"><svg viewBox="0 0 24 24"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg></button>
+    </div>
+  </div>
+  <div class="lb-stage" id="lbStage">
+    <button type="button" class="lb-nav prev" id="lbPrev" aria-label="Foto sebelumnya"><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg></button>
+    <img id="lbImg" alt="" draggable="false">
+    <button type="button" class="lb-nav next" id="lbNext" aria-label="Foto berikutnya"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>
+  </div>
+  <p class="lb-cap" id="lbCap"></p>
+</div>
 <script>
-const PER_PAGE = 10;
+const PER = { video: 10, foto: 12 };   // jumlah per halaman
+const LABEL = { video: 'video', foto: 'foto' };
+const EMPTY = { video: 'Belum ada video. Tambahkan link di videos.txt.', foto: 'Belum ada foto. Tambahkan link gambar di photos.txt.' };
+const LOAD_ERR = 'Gagal memuat daftar. Buka lewat GitHub Pages atau server lokal, bukan file://.';
+const lists = { video: [], foto: [] };
+const loadError = { video: false, foto: false };
+let tab = 'video';
+const gallery = document.getElementById('gallery');
+const tabBtns = [...document.querySelectorAll('.tabs button')];
+const lb = document.getElementById('lb'), lbImg = document.getElementById('lbImg'), lbCap = document.getElementById('lbCap');
+const lbCount = document.getElementById('lbCount'), lbOpen = document.getElementById('lbOpen');
+const lbPrev = document.getElementById('lbPrev'), lbNext = document.getElementById('lbNext'), lbClose = document.getElementById('lbClose');
+const lbStage = document.getElementById('lbStage');
 const grid = document.getElementById('grid');
 const pager = document.getElementById('pager');
 const msg = document.getElementById('msg');
 const statusEl = document.getElementById('status');
 const countEl = document.getElementById('count');
-let videos = [];
 let current = null;
 let muted = false;
 
@@ -132,10 +196,18 @@ const ioPlay = new IntersectionObserver(entries => {
   entries.forEach(e => { if (!e.isIntersecting && e.target === current) stopCurrent(); });
 }, { threshold: 0.2 });
 
+function readTab() { return new URLSearchParams(location.search).get('tab') === 'foto' ? 'foto' : 'video'; }
+function buildUrl(t, p) {
+  const q = new URLSearchParams();
+  if (t !== 'video') q.set('tab', t);
+  if (p > 1) q.set('page', p);
+  const str = q.toString();
+  return str ? '?' + str : location.pathname;
+}
+function totalPages() { return Math.max(1, Math.ceil(lists[tab].length / PER[tab])); }
 function getPage() {
   const p = parseInt(new URLSearchParams(location.search).get('page'), 10);
-  const total = Math.max(1, Math.ceil(videos.length / PER_PAGE));
-  return Math.min(Math.max(p || 1, 1), total);
+  return Math.min(Math.max(p || 1, 1), totalPages());
 }
 
 function stopCurrent() {
@@ -208,22 +280,108 @@ function buildItem(item) {
 
 function render() {
   stopCurrent();
+  closeLightbox(false);
   io.disconnect(); ioPlay.disconnect();
-  const page = getPage();
-  const total = Math.ceil(videos.length / PER_PAGE);
-  grid.innerHTML = '';
-  videos.slice((page - 1) * PER_PAGE, page * PER_PAGE).forEach(item => {
-    const { el, v } = buildItem(item);
-    grid.appendChild(el);
-    io.observe(v);
-    ioPlay.observe(v);
-  });
-  grid.classList.toggle('is-muted', muted);
-  document.title = page > 1 ? 'BunnyVid, halaman ' + page : 'BunnyVid';
+  tab = readTab();
+  tabBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tab === tab)));
+  const list = lists[tab];
+  countEl.textContent = list.length + ' ' + LABEL[tab];
+  grid.hidden = tab !== 'video';
+  gallery.hidden = tab !== 'foto';
+  grid.innerHTML = ''; gallery.innerHTML = ''; pager.innerHTML = ''; statusEl.textContent = '';
+  msg.hidden = true;
+  if (!list.length) {
+    msg.hidden = false;
+    msg.textContent = loadError[tab] ? LOAD_ERR : EMPTY[tab];
+    document.title = tab === 'foto' ? 'BunnyVid, foto' : 'BunnyVid';
+    window.scrollTo(0, 0);
+    return;
+  }
+  const page = getPage(), total = totalPages();
+  const from = (page - 1) * PER[tab];
+  const slice = list.slice(from, from + PER[tab]);
+  if (tab === 'video') {
+    slice.forEach(item => {
+      const { el, v } = buildItem(item);
+      grid.appendChild(el);
+      io.observe(v);
+      ioPlay.observe(v);
+    });
+    grid.classList.toggle('is-muted', muted);
+  } else {
+    slice.forEach((item, i) => gallery.appendChild(buildPhoto(item, from + i)));
+  }
+  document.title = 'BunnyVid' + (tab === 'foto' ? ', foto' : '') + (page > 1 ? ', halaman ' + page : '');
   statusEl.textContent = total > 1 ? 'Halaman ' + page + ' dari ' + total : '';
   renderPager(page, total);
   window.scrollTo(0, 0);
 }
+
+function buildPhoto(item, index) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'ph loading';
+  b.setAttribute('aria-label', 'Buka foto' + (item.title ? ': ' + item.title : ''));
+  const img = new Image();
+  img.loading = 'lazy';
+  img.decoding = 'async';
+  img.alt = item.title || '';
+  img.addEventListener('load', () => b.classList.remove('loading'));
+  img.addEventListener('error', () => { b.classList.remove('loading'); b.classList.add('bad'); b.disabled = true; });
+  img.src = item.url;
+  b.append(img);
+  if (item.title) { const c = document.createElement('div'); c.className = 'cap'; c.textContent = item.title; b.append(c); }
+  b.addEventListener('click', () => openLightbox(index, b));
+  return b;
+}
+
+// ---------- viewer foto ----------
+let lbIndex = -1, lbOpener = null;
+function showLb(i) {
+  const list = lists.foto;
+  lbIndex = Math.min(Math.max(i, 0), list.length - 1);
+  const it = list[lbIndex];
+  lbImg.src = it.url;
+  lbImg.alt = it.title || '';
+  lbCap.textContent = it.title || '';
+  lbOpen.href = it.url;
+  lbCount.textContent = (lbIndex + 1) + ' / ' + list.length;
+  lbPrev.disabled = lbIndex === 0;
+  lbNext.disabled = lbIndex === list.length - 1;
+  [lbIndex - 1, lbIndex + 1].forEach(j => { if (list[j]) new Image().src = list[j].url; }); // preload tetangga
+}
+function openLightbox(i, opener) {
+  lbOpener = opener;
+  lb.hidden = false;
+  document.body.style.overflow = 'hidden';
+  showLb(i);
+  lbClose.focus();
+}
+function closeLightbox(sync = true) {
+  if (lb.hidden) return;
+  lb.hidden = true;
+  lbImg.removeAttribute('src');
+  document.body.style.overflow = '';
+  const idx = lbIndex;
+  const opener = lbOpener;
+  lbOpener = null;
+  // kalau geser ke foto di halaman lain, ikut pindah ke halamannya
+  if (sync && idx >= 0) {
+    const p = Math.floor(idx / PER.foto) + 1;
+    if (p !== getPage()) { go(p); return; }
+  }
+  if (opener && document.contains(opener)) opener.focus({ preventScroll: true });
+}
+lbClose.addEventListener('click', () => closeLightbox());
+lbPrev.addEventListener('click', () => showLb(lbIndex - 1));
+lbNext.addEventListener('click', () => showLb(lbIndex + 1));
+lbStage.addEventListener('click', e => { if (e.target === lbStage) closeLightbox(); });
+let tx = 0, ty = 0;
+lbStage.addEventListener('touchstart', e => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
+lbStage.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+  if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) showLb(lbIndex + (dx < 0 ? 1 : -1));
+}, { passive: true });
 
 function renderPager(page, total) {
   pager.innerHTML = '';
@@ -244,24 +402,37 @@ function renderPager(page, total) {
   btn('Berikutnya', page + 1, { disabled: page === total });
 }
 
-function go(p) {
-  history.pushState(null, '', p === 1 ? location.pathname : '?page=' + p);
+function go(p, t = tab) {
+  history.pushState(null, '', buildUrl(t, p));
   render();
 }
+tabBtns.forEach(b => b.addEventListener('click', () => { if (b.dataset.tab !== tab) go(1, b.dataset.tab); }));
 window.addEventListener('popstate', render);
 
 // logo/judul: balik ke halaman 1 tanpa reload
 document.getElementById('home').addEventListener('click', e => {
   if (e.metaKey || e.ctrlKey || e.shiftKey) return;
   e.preventDefault();
-  if (getPage() !== 1 || location.search) go(1); else window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (location.search) go(1, 'video'); else window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-// panah kiri/kanan untuk ganti halaman
+// keyboard: di viewer foto panah = foto sebelumnya/berikutnya, selain itu panah = ganti halaman
 document.addEventListener('keydown', e => {
+  if (!lb.hidden) {
+    if (e.key === 'Escape') closeLightbox();
+    else if (e.key === 'ArrowLeft') showLb(lbIndex - 1);
+    else if (e.key === 'ArrowRight') showLb(lbIndex + 1);
+    else if (e.key === 'Tab') { // fokus tetap di dalam viewer
+      const f = [...lb.querySelectorAll('button:not(:disabled),a[href]')];
+      const i = f.indexOf(document.activeElement);
+      if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+      else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+    }
+    return;
+  }
   if (e.altKey || e.ctrlKey || e.metaKey || document.fullscreenElement) return;
   if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
-  const page = getPage(), total = Math.ceil(videos.length / PER_PAGE);
+  const page = getPage(), total = totalPages();
   if (e.key === 'ArrowRight' && page < total) go(page + 1);
   if (e.key === 'ArrowLeft' && page > 1) go(page - 1);
 });
@@ -278,7 +449,7 @@ function parseTxt(text) {
       return { title: l.slice(0, k).trim(), url: l.slice(k + 1).trim() };
     }
     return { url: l };
-  }).filter(v => /^https?:\/\//i.test(v.url));
+  }).filter(v => /^https?:\/\//i.test(v.url) || /^[\w.\-\/%]+\.(jpe?g|png|gif|webp|avif|mp4|webm|mov)(\?.*)?$/i.test(v.url)); // link penuh, atau path file di repo
 }
 
 // link ganda dibuang, yang dipakai kemunculan paling bawah
@@ -300,14 +471,23 @@ async function loadVideos() {
   return Array.isArray(d) ? d : (d.videos || []);
 }
 
-loadVideos()
-  .then(list => {
-    videos = dedupe(list).reverse(); // terbaru (paling bawah di file) jadi paling atas
-    countEl.textContent = videos.length + ' video';
-    if (!videos.length) { msg.hidden = false; msg.textContent = 'Belum ada video. Tambahkan link di videos.txt.'; return; }
-    render();
-  })
-  .catch(() => { msg.hidden = false; msg.textContent = 'Gagal memuat daftar video. Buka lewat GitHub Pages atau server lokal, bukan file://.'; });
+// photos.txt formatnya sama dengan videos.txt. Kalau belum ada, galeri kosong (bukan error).
+async function loadPhotos() {
+  try {
+    const r = await fetch('photos.txt', { cache: 'no-cache' });
+    if (r.ok) return parseTxt(await r.text());
+  } catch (e) {}
+  return [];
+}
+
+Promise.all([
+  loadVideos().catch(() => { loadError.video = true; return []; }),
+  loadPhotos()
+]).then(([v, f]) => {
+  lists.video = dedupe(v).reverse(); // terbaru (paling bawah di file) jadi paling atas
+  lists.foto = dedupe(f).reverse();
+  render();
+});
 </script>
 </body>
 </html>
