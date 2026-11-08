@@ -3,3 +3,4 @@
 # Foto dari repo sendiri juga bisa: taruh di folder foto/ lalu tulis foto/nama.jpg
 # Tambah foto baru di PALING BAWAH, otomatis tampil paling atas.
 
+https://i.postimg.cc/NMngmsnG/snapshot-manhwadesu-rest-1794120064803.png
