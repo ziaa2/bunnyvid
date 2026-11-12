@@ -109,6 +109,12 @@
   .lb-nav:disabled{opacity:.25;cursor:default}
   .lb-cap{padding:10px 16px calc(14px + env(safe-area-inset-bottom,0px));text-align:center;font-size:14px;line-height:1.4;min-height:20px}
   .lb button:focus-visible,.lb a:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+  /* slot iklan: kosong = tidak tampil sama sekali */
+  .ad{display:flex;flex-direction:column;align-items:center;gap:4px;max-width:100%;margin:0 auto 14px;overflow:hidden}
+  .ad:empty{display:none}
+  .ad::before{content:"Iklan";font-size:11px;color:var(--muted)}
+  #ad-bottom{margin:28px auto 0}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -132,12 +138,41 @@
     <button type="button" data-tab="video" aria-pressed="true">Video</button>
     <button type="button" data-tab="foto" aria-pressed="false">Foto</button>
   </div>
+  <!-- IKLAN ATAS: tempel kode banner dari ad network di antara tag div di bawah ini -->
+  <div class="ad" id="ad-top">
+    <script>
+      atOptions = {
+        'key' : '89538a995ffe3248a2a7e573f92a52a7',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+      };
+    </script>
+    <script src="https://bicea.org/22/89538a995ffe3248a2a7e573f92a52a7"></script>
+  </div>
   <div class="grid" id="grid"></div>
   <div class="gallery" id="gallery" hidden></div>
   <nav id="pager" aria-label="Halaman"></nav>
   <p class="status" id="status" aria-live="polite"></p>
+  <!-- IKLAN BAWAH: tempel kode banner kedua di antara tag div di bawah ini (boleh dikosongkan) -->
+  <div class="ad" id="ad-bottom">
+    <script>
+      atOptions = {
+        'key' : 'cc1f5431a256a66c557fa0d4b7f8d7da',
+        'format' : 'iframe',
+        'height' : 250,
+        'width' : 300,
+        'params' : {}
+      };
+    </script>
+    <script src="https://bicea.org/22/cc1f5431a256a66c557fa0d4b7f8d7da"></script>
+  </div>
   <p class="msg" id="msg" hidden></p>
 </main>
+<!-- SCRIPT IKLAN GLOBAL: kode jenis Social Bar / Popunder / auto ads dari ad network ditempel di sini -->
+<script data-cfasync="false" src="https://bicea.org/14/7d7ce0c11e75cc629252637236aabec0"></script>
+
 <div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Foto" hidden>
   <div class="lb-top">
     <span id="lbCount"></span>
