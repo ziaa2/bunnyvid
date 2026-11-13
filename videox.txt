@@ -1,0 +1,5 @@
+# Panel Videox: untuk video panjang (2 menit atau lebih), diputar di pop-up.
+# Satu baris = satu link video (direct link .mp4)
+# Mau pakai judul: Judul | https://link.mp4
+# Tambah video baru di PALING BAWAH, otomatis tampil paling atas.
+

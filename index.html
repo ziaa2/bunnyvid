@@ -148,6 +148,24 @@
   .item.embed-on .xbtn{display:grid}
   .xbtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 
+
+  /* panel Videox: kartu video panjang + pop-up pemutar */
+  .dur{position:absolute;top:8px;right:8px;z-index:2;padding:0 6px;border-radius:6px;background:rgba(0,0,0,.65);color:#fff;font-size:12px;line-height:20px;pointer-events:none}
+  .dur:empty{display:none}
+  .item.big video{pointer-events:none}
+  .vp{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(0,0,0,.82);color:#fff}
+  .vp-box{width:min(100%,900px);max-height:100%;display:flex;flex-direction:column;background:#111;border-radius:12px;overflow:hidden}
+  .vp-top{display:flex;align-items:center;justify-content:space-between;padding:6px 8px 6px 14px;font-size:14px}
+  .vp-stage{background:#000;display:flex}
+  .vp-stage video{display:block;width:100%;max-height:70vh;background:#000}
+  .vp-bar{display:flex;align-items:center;gap:10px;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px))}
+  .vp-bar p{flex:1;min-width:0;text-align:center;font-size:14px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .vp button{border:0;color:#fff;cursor:pointer;font:inherit}
+  .vp-nav{height:36px;padding:0 14px;border-radius:8px;background:rgba(255,255,255,.14)}
+  .vp-nav:disabled{opacity:.3;cursor:default}
+  .vp svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .vp button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
   /* label Baru */
   .new{position:absolute;top:8px;left:8px;z-index:2;padding:0 8px;border-radius:999px;background:var(--brand);color:var(--brand-fg);font-size:11px;font-weight:700;line-height:20px;pointer-events:none}
   .item.bad .new,.ph.bad .new{display:none}
@@ -175,6 +193,7 @@
   <div class="tabs" role="group" aria-label="Jenis konten">
     <button type="button" data-tab="video" aria-pressed="true">Video</button>
     <button type="button" data-tab="foto" aria-pressed="false">Foto</button>
+    <button type="button" data-tab="videox" aria-pressed="false">Videox</button>
   </div>
   <!-- IKLAN ATAS: tempel kode banner dari ad network di antara tag div di bawah ini -->
   <div class="ad" id="ad-top">
@@ -219,6 +238,21 @@
 <!-- SCRIPT IKLAN GLOBAL: kode jenis Social Bar / Popunder / auto ads dari ad network ditempel di sini -->
 <script data-cfasync="false" src="https://bicea.org/14/7d7ce0c11e75cc629252637236aabec0"></script>
 
+<div class="vp" id="vp" role="dialog" aria-modal="true" aria-label="Pemutar video" hidden>
+  <div class="vp-box">
+    <div class="vp-top">
+      <span id="vpCount"></span>
+      <button type="button" class="lb-x" id="vpClose" aria-label="Tutup"><svg viewBox="0 0 24 24"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg></button>
+    </div>
+    <div class="vp-stage"><video id="vpVideo" controls playsinline preload="metadata"></video></div>
+    <div class="vp-bar">
+      <button type="button" class="vp-nav" id="vpPrev">Sebelumnya</button>
+      <p id="vpCap"></p>
+      <button type="button" class="vp-nav" id="vpNext">Berikutnya</button>
+    </div>
+  </div>
+</div>
+
 <div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Foto" hidden>
   <div class="lb-top">
     <span id="lbCount"></span>
@@ -235,13 +269,13 @@
   <p class="lb-cap" id="lbCap"></p>
 </div>
 <script>
-const PER = { video: 10, foto: 12 };
+const PER = { video: 10, foto: 12, videox: 10 };
 const NEW_COUNT = 5;   // jumlah konten teratas yang diberi label Baru   // jumlah per halaman
-const LABEL = { video: 'video', foto: 'foto' };
-const EMPTY = { video: 'Belum ada video. Tambahkan link di videos.txt.', foto: 'Belum ada foto. Tambahkan link gambar di photos.txt.' };
+const LABEL = { video: 'video', foto: 'foto', videox: 'video' };
+const EMPTY = { video: 'Belum ada video. Tambahkan link di videos.txt.', foto: 'Belum ada foto. Tambahkan link gambar di photos.txt.', videox: 'Belum ada video. Tambahkan link di videox.txt.' };
 const LOAD_ERR = 'Gagal memuat daftar. Buka lewat GitHub Pages atau server lokal, bukan file://.';
-const lists = { video: [], foto: [] };
-const loadError = { video: false, foto: false };
+const lists = { video: [], foto: [], videox: [] };
+const loadError = { video: false, foto: false, videox: false };
 let tab = 'video';
 const gallery = document.getElementById('gallery');
 const tabBtns = [...document.querySelectorAll('.tabs button')];
@@ -249,6 +283,8 @@ const lb = document.getElementById('lb'), lbImg = document.getElementById('lbImg
 const lbCount = document.getElementById('lbCount'), lbOpen = document.getElementById('lbOpen');
 const lbPrev = document.getElementById('lbPrev'), lbNext = document.getElementById('lbNext'), lbClose = document.getElementById('lbClose');
 const lbStage = document.getElementById('lbStage');
+const vp = document.getElementById('vp'), vpVideo = document.getElementById('vpVideo'), vpCap = document.getElementById('vpCap'), vpCount = document.getElementById('vpCount');
+const vpPrev = document.getElementById('vpPrev'), vpNext = document.getElementById('vpNext'), vpClose = document.getElementById('vpClose');
 const grid = document.getElementById('grid');
 const pager = document.getElementById('pager');
 const msg = document.getElementById('msg');
@@ -278,7 +314,8 @@ const ioPlay = new IntersectionObserver(entries => {
   entries.forEach(e => { if (!e.isIntersecting && e.target === current) stopCurrent(); });
 }, { threshold: 0.2 });
 
-function readTab() { return new URLSearchParams(location.search).get('tab') === 'foto' ? 'foto' : 'video'; }
+function readTab() { const t = new URLSearchParams(location.search).get('tab'); return t === 'foto' || t === 'videox' ? t : 'video'; }
+function tabTitle() { return 'BunnyVid' + (tab === 'foto' ? ', foto' : tab === 'videox' ? ', videox' : ''); }
 function buildUrl(t, p) {
   const q = new URLSearchParams();
   if (t !== 'video') q.set('tab', t);
@@ -411,19 +448,20 @@ function buildItem(item, isNew) {
 function render() {
   stopCurrent();
   closeLightbox(false);
+  closeVp(false);
   io.disconnect(); ioPlay.disconnect();
   tab = readTab();
   tabBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tab === tab)));
   const list = lists[tab];
   countEl.textContent = list.length + ' ' + LABEL[tab];
-  grid.hidden = tab !== 'video';
+  grid.hidden = tab === 'foto';
   gallery.hidden = tab !== 'foto';
   grid.innerHTML = ''; gallery.innerHTML = ''; pager.innerHTML = ''; statusEl.textContent = '';
   msg.hidden = true;
   if (!list.length) {
     msg.hidden = false;
     msg.textContent = loadError[tab] ? LOAD_ERR : EMPTY[tab];
-    document.title = tab === 'foto' ? 'BunnyVid, foto' : 'BunnyVid';
+    document.title = tabTitle();
     window.scrollTo(0, 0);
     return;
   }
@@ -437,6 +475,12 @@ function render() {
       if (v) { io.observe(v); ioPlay.observe(v); } else { ioPlay.observe(el); }
     });
     grid.classList.toggle('is-muted', muted);
+  } else if (tab === 'videox') {
+    slice.forEach((item, i) => {
+      const { el, v } = buildBig(item, from + i, from + i < NEW_COUNT);
+      grid.appendChild(el);
+      io.observe(v);
+    });
   } else {
     // 2 kolom diisi selang-seling (kiri, kanan, kiri, ...) supaya yang terbaru ada di atas kedua kolom
     const cols = [document.createElement('div'), document.createElement('div')];
@@ -444,11 +488,88 @@ function render() {
     slice.forEach((item, i) => cols[i % 2].appendChild(buildPhoto(item, from + i)));
   }
   document.getElementById('canon').href = 'https://bunnyvid.my.id' + (buildUrl(tab, page) === location.pathname ? '/' : '/' + buildUrl(tab, page));
-  document.title = 'BunnyVid' + (tab === 'foto' ? ', foto' : '') + (page > 1 ? ', halaman ' + page : '');
+  document.title = tabTitle() + (page > 1 ? ', halaman ' + page : '');
   statusEl.textContent = total > 1 ? 'Halaman ' + page + ' dari ' + total : '';
   renderPager(page, total);
   window.scrollTo(0, 0);
 }
+
+// ---------- Videox: kartu video panjang, diputar di pop-up ----------
+function fmtDur(sec) {
+  if (!isFinite(sec)) return '';
+  const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+  return m + ':' + String(s).padStart(2, '0');
+}
+
+function buildBig(item, index, isNew) {
+  const el = document.createElement('div');
+  el.className = 'item big';
+  const v = document.createElement('video');
+  v.dataset.src = item.url;
+  v.preload = 'metadata';
+  v.muted = true;
+  v.playsInline = true;
+  v.setAttribute('playsinline', '');
+  const hit = document.createElement('button');
+  hit.type = 'button';
+  hit.className = 'hit';
+  hit.setAttribute('aria-label', 'Putar ' + (item.title || 'video'));
+  const t = document.createElement('div'); t.className = 't'; t.textContent = item.title || '';
+  const p = document.createElement('div'); p.className = 'p';
+  const d = document.createElement('div'); d.className = 'dur';
+  const err = document.createElement('div'); err.className = 'err';
+  err.textContent = 'Video tidak bisa dimuat. Cek link-nya di videox.txt.';
+  el.append(v, t, p, d, err, hit);
+  if (isNew) el.append(makeNew());
+  v.addEventListener('loadedmetadata', () => { d.textContent = fmtDur(v.duration); });
+  v.addEventListener('error', () => { if (v.getAttribute('src')) el.classList.add('bad'); });
+  hit.addEventListener('click', () => { if (!el.classList.contains('bad')) openVp(index, hit); });
+  return { el, v };
+}
+
+let vpIndex = -1, vpOpener = null;
+function showVp(i) {
+  const list = lists.videox;
+  vpIndex = Math.min(Math.max(i, 0), list.length - 1);
+  const it = list[vpIndex];
+  vpVideo.src = it.url;
+  vpVideo.play().catch(() => {});
+  vpCap.textContent = it.title || '';
+  vpCount.textContent = (vpIndex + 1) + ' / ' + list.length;
+  vpPrev.disabled = vpIndex === 0;
+  vpNext.disabled = vpIndex === list.length - 1;
+}
+function openVp(i, opener) {
+  stopCurrent();
+  vpOpener = opener;
+  vp.hidden = false;
+  document.body.style.overflow = 'hidden';
+  showVp(i);
+  vpClose.focus();
+}
+function closeVp(sync = true) {
+  if (vp.hidden) return;
+  vpVideo.pause();
+  vpVideo.removeAttribute('src');
+  vpVideo.load(); // hentikan unduhan
+  vp.hidden = true;
+  document.body.style.overflow = '';
+  const idx = vpIndex, opener = vpOpener;
+  vpOpener = null;
+  // kalau pindah ke video di halaman lain, ikut pindah ke halamannya
+  if (sync && idx >= 0) {
+    const p = Math.floor(idx / PER.videox) + 1;
+    if (p !== getPage()) { go(p); return; }
+  }
+  if (opener && document.contains(opener)) opener.focus({ preventScroll: true });
+}
+vpClose.addEventListener('click', () => closeVp());
+vpPrev.addEventListener('click', () => showVp(vpIndex - 1));
+vpNext.addEventListener('click', () => showVp(vpIndex + 1));
+vp.addEventListener('click', e => { if (e.target === vp) closeVp(); });
+vpVideo.addEventListener('error', () => {
+  if (vpVideo.getAttribute('src')) vpCap.textContent = 'Video tidak bisa dimuat. Cek link-nya di videox.txt.';
+});
 
 function buildPhoto(item, index) {
   const b = document.createElement('button');
@@ -550,14 +671,18 @@ document.getElementById('home').addEventListener('click', e => {
   if (location.search) go(1, 'video'); else window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-// keyboard: di viewer foto panah = foto sebelumnya/berikutnya, selain itu panah = ganti halaman
+// keyboard: di viewer foto / pop-up video panah = sebelumnya/berikutnya, selain itu panah = ganti halaman
 document.addEventListener('keydown', e => {
-  if (!lb.hidden) {
-    if (e.key === 'Escape') closeLightbox();
-    else if (e.key === 'ArrowLeft') showLb(lbIndex - 1);
-    else if (e.key === 'ArrowRight') showLb(lbIndex + 1);
-    else if (e.key === 'Tab') { // fokus tetap di dalam viewer
-      const f = [...lb.querySelectorAll('button:not(:disabled),a[href]')];
+  const modal = !lb.hidden ? lb : (!vp.hidden ? vp : null);
+  if (modal) {
+    if (e.key === 'Escape') { if (modal === lb) closeLightbox(); else closeVp(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      if (modal === vp && document.activeElement === vpVideo) return; // panah di dalam video = geser durasi
+      const d = e.key === 'ArrowLeft' ? -1 : 1;
+      if (modal === lb) showLb(lbIndex + d); else showVp(vpIndex + d);
+    }
+    else if (e.key === 'Tab') { // fokus tetap di dalam jendela
+      const f = [...modal.querySelectorAll('button:not(:disabled),a[href]')];
       const i = f.indexOf(document.activeElement);
       if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
       else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
@@ -627,12 +752,23 @@ async function loadPhotos() {
 
 
 
+// videox.txt: video panjang, diputar di pop-up. Hanya link .mp4 langsung. Kalau belum ada, tab kosong (bukan error).
+async function loadVideox() {
+  try {
+    const r = await fetch('videox.txt', { cache: 'no-cache' });
+    if (r.ok) return parseTxt(await r.text()).filter(x => x.type !== 'embed');
+  } catch (e) {}
+  return [];
+}
+
 Promise.all([
   loadVideos().catch(() => { loadError.video = true; return []; }),
-  loadPhotos()
-]).then(([v, f]) => {
+  loadPhotos(),
+  loadVideox()
+]).then(([v, f, x]) => {
   lists.video = dedupe(v).reverse(); // terbaru (paling bawah di file) jadi paling atas
   lists.foto = dedupe(f).reverse();
+  lists.videox = dedupe(x).reverse();
   render();
 });
 </script>

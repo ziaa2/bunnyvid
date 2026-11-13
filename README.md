@@ -28,6 +28,13 @@ Tempel kode dari ad network **di antara tag `<div ...></div>`** (untuk banner) a
 
 Jangan klik iklan sendiri, itu bisa bikin akun iklan dibanned.
 
+## Panel Videox (video panjang)
+Tab **Videox** untuk video yang durasinya panjang (2 menit atau lebih), supaya terpisah dari tab Video. Daftarnya ada di `videox.txt`, formatnya sama seperti `videos.txt` (satu baris satu link `.mp4`, boleh `Judul | link`, tambah di baris paling bawah).
+
+- Kartu menampilkan cuplikan frame awal dan durasi. Saat dipencet, video diputar di **pop-up** dengan kontrol bawaan browser.
+- Tutup dengan tombol X, tombol Esc, atau ketuk area gelap. Tombol Sebelumnya/Berikutnya pindah antar video.
+- 10 video per halaman. Hanya link `.mp4` langsung yang didukung di tab ini.
+
 ## Video embed Streamable
 Selain link `.mp4` langsung, `videos.txt` juga menerima video Streamable. Tempel salah satu di **satu baris**:
 
