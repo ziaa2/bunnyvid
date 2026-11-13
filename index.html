@@ -4,7 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BunnyVid</title>
-<meta name="description" content="BunnyVid, kumpulan video pendek.">
+<meta name="description" content="BunnyVid: tempat nonton video pendek dan lihat galeri foto anime. Gratis, ringan, dan nyaman dibuka lewat HP.">
+<link rel="canonical" href="https://bunnyvid.my.id/" id="canon">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BunnyVid">
+<meta property="og:locale" content="id_ID">
+<meta property="og:title" content="BunnyVid">
+<meta property="og:description" content="Video pendek dan galeri foto anime. Gratis, ringan, nyaman dibuka lewat HP.">
+<meta property="og:url" content="https://bunnyvid.my.id/">
+<meta property="og:image" content="https://bunnyvid.my.id/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="BunnyVid">
+<meta name="twitter:description" content="Video pendek dan galeri foto anime. Gratis, ringan, nyaman dibuka lewat HP.">
+<meta name="twitter:image" content="https://bunnyvid.my.id/og-image.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"BunnyVid","url":"https://bunnyvid.my.id/","inLanguage":"id"}</script>
 <meta name="theme-color" content="#d63a63">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg fill='%23d63a63'%3E%3Cellipse cx='11' cy='8' rx='3.2' ry='7'/%3E%3Cellipse cx='21' cy='8' rx='3.2' ry='7'/%3E%3Crect x='3' y='11' width='26' height='19' rx='9'/%3E%3C/g%3E%3Cpath d='M13.5 15.5v10l8-5z' fill='%23fff'/%3E%3C/svg%3E">
 <style>
@@ -85,7 +100,8 @@
   .tabs button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);font-weight:600}
 
   /* galeri foto: 2 kolom, tinggi mengikuti gambar */
-  .gallery{column-count:2;column-gap:8px}
+  .gallery{display:flex;gap:8px;align-items:flex-start}
+  .gallery .col{flex:1;min-width:0}
   .ph{position:relative;display:block;width:100%;margin:0 0 8px;padding:0;border:0;border-radius:8px;overflow:hidden;background:var(--card);cursor:pointer;break-inside:avoid;color:inherit;font:inherit}
   .ph img{display:block;width:100%;height:auto}
   .ph.loading{aspect-ratio:3/4}
@@ -115,6 +131,27 @@
   .ad:empty{display:none}
   .ad::before{content:"Iklan";font-size:11px;color:var(--muted)}
   #ad-bottom{margin:28px auto 0}
+
+  /* footer: kontak iklan */
+  .foot{max-width:640px;margin:0 auto;padding:4px 12px calc(28px + env(safe-area-inset-bottom,0px));text-align:center;font-size:13px;color:var(--muted);line-height:1.6}
+  .foot a{display:inline-flex;align-items:center;gap:6px;color:var(--fg);text-decoration:none;font-weight:600;padding:6px 4px}
+  .foot a:hover{text-decoration:underline}
+  .foot svg{width:20px;height:20px;flex:none}
+  .foot .copy{display:block;margin-top:4px;font-size:12px}
+
+
+  /* video embed (Streamable) */
+  .item.embed{background:linear-gradient(160deg,#2b2b33,#15151a)}
+  .item iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+  .item.embed-on .hit,.item.embed-on .new{display:none}
+  .xbtn{position:absolute;top:8px;right:8px;z-index:3;width:34px;height:34px;border:0;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:none;place-items:center;cursor:pointer}
+  .item.embed-on .xbtn{display:grid}
+  .xbtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+
+  /* label Baru */
+  .new{position:absolute;top:8px;left:8px;z-index:2;padding:0 8px;border-radius:999px;background:var(--brand);color:var(--brand-fg);font-size:11px;font-weight:700;line-height:20px;pointer-events:none}
+  .item.bad .new,.ph.bad .new{display:none}
+
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -134,6 +171,7 @@
   </div>
 </header>
 <main>
+  <noscript><p class="msg">BunnyVid: video pendek dan galeri foto anime. Aktifkan JavaScript untuk melihat isinya.</p></noscript>
   <div class="tabs" role="group" aria-label="Jenis konten">
     <button type="button" data-tab="video" aria-pressed="true">Video</button>
     <button type="button" data-tab="foto" aria-pressed="false">Foto</button>
@@ -170,6 +208,14 @@
   </div>
   <p class="msg" id="msg" hidden></p>
 </main>
+<!-- KONTAK IKLAN: link Telegram untuk pasang iklan. Ganti rendy098 kalau username berubah. -->
+<footer class="foot" id="foot">
+  <a id="tg" href="https://t.me/rendy098" target="_blank" rel="noopener" aria-label="Pasang iklan: hubungi @rendy098 lewat Telegram">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#229ED9" d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+    <span>Mau pasang iklan di sini? Hubungi kami</span>
+  </a>
+  <span class="copy">&copy; 2026 BunnyVid</span>
+</footer>
 <!-- SCRIPT IKLAN GLOBAL: kode jenis Social Bar / Popunder / auto ads dari ad network ditempel di sini -->
 <script data-cfasync="false" src="https://bicea.org/14/7d7ce0c11e75cc629252637236aabec0"></script>
 
@@ -189,7 +235,8 @@
   <p class="lb-cap" id="lbCap"></p>
 </div>
 <script>
-const PER = { video: 10, foto: 12 };   // jumlah per halaman
+const PER = { video: 10, foto: 12 };
+const NEW_COUNT = 5;   // jumlah konten teratas yang diberi label Baru   // jumlah per halaman
 const LABEL = { video: 'video', foto: 'foto' };
 const EMPTY = { video: 'Belum ada video. Tambahkan link di videos.txt.', foto: 'Belum ada foto. Tambahkan link gambar di photos.txt.' };
 const LOAD_ERR = 'Gagal memuat daftar. Buka lewat GitHub Pages atau server lokal, bukan file://.';
@@ -245,11 +292,58 @@ function getPage() {
   return Math.min(Math.max(p || 1, 1), totalPages());
 }
 
+// current = elemen <video> yang sedang diputar, atau kartu (div) untuk video embed
 function stopCurrent() {
-  if (current) { current.pause(); current.parentElement.classList.remove('playing'); current = null; }
+  if (!current) return;
+  if (current.tagName === 'VIDEO') {
+    current.pause();
+    current.parentElement.classList.remove('playing');
+  } else {
+    const f = current.querySelector('iframe');
+    if (f) f.remove(); // hapus iframe = video berhenti total
+    current.classList.remove('playing', 'embed-on');
+  }
+  current = null;
 }
 
-function buildItem(item) {
+function makeNew() { const n = document.createElement('div'); n.className = 'new'; n.textContent = 'Baru'; return n; }
+
+const ICON_CLOSE = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg>';
+
+// video embed Streamable: iframe baru dibuat saat kartu dipencet, jadi 10 kartu tidak langsung berat
+function buildEmbed(item, isNew) {
+  const el = document.createElement('div');
+  el.className = 'item embed';
+  const hit = document.createElement('button');
+  hit.type = 'button';
+  hit.className = 'hit';
+  hit.setAttribute('aria-label', 'Putar ' + (item.title || 'video'));
+  const t = document.createElement('div'); t.className = 't'; t.textContent = item.title || '';
+  const p = document.createElement('div'); p.className = 'p';
+  const x = document.createElement('button');
+  x.type = 'button'; x.className = 'xbtn'; x.setAttribute('aria-label', 'Tutup video'); x.innerHTML = ICON_CLOSE;
+  el.append(t, p, hit, x);
+  if (isNew) el.append(makeNew());
+
+  hit.addEventListener('click', () => {
+    stopCurrent();
+    const f = document.createElement('iframe');
+    f.src = item.url + '?autoplay=1';
+    f.title = item.title || 'Video';
+    f.allow = 'autoplay; fullscreen';
+    f.setAttribute('allowfullscreen', '');
+    el.insertBefore(f, t);
+    el.classList.add('playing', 'embed-on');
+    current = el;
+    x.focus({ preventScroll: true });
+  });
+  x.addEventListener('click', () => { stopCurrent(); hit.focus({ preventScroll: true }); });
+
+  return { el, v: null };
+}
+
+function buildItem(item, isNew) {
+  if (item.type === 'embed') return buildEmbed(item, isNew);
   const el = document.createElement('div');
   el.className = 'item';
 
@@ -281,6 +375,7 @@ function buildItem(item) {
   ctl.append(bMute, bFull);
 
   el.append(v, t, p, bar, err, hit, ctl);
+  if (isNew) el.append(makeNew());
 
   const toggle = () => {
     if (el.classList.contains('bad')) return;
@@ -336,16 +431,19 @@ function render() {
   const from = (page - 1) * PER[tab];
   const slice = list.slice(from, from + PER[tab]);
   if (tab === 'video') {
-    slice.forEach(item => {
-      const { el, v } = buildItem(item);
+    slice.forEach((item, i) => {
+      const { el, v } = buildItem(item, from + i < NEW_COUNT);
       grid.appendChild(el);
-      io.observe(v);
-      ioPlay.observe(v);
+      if (v) { io.observe(v); ioPlay.observe(v); } else { ioPlay.observe(el); }
     });
     grid.classList.toggle('is-muted', muted);
   } else {
-    slice.forEach((item, i) => gallery.appendChild(buildPhoto(item, from + i)));
+    // 2 kolom diisi selang-seling (kiri, kanan, kiri, ...) supaya yang terbaru ada di atas kedua kolom
+    const cols = [document.createElement('div'), document.createElement('div')];
+    cols.forEach(c => { c.className = 'col'; gallery.appendChild(c); });
+    slice.forEach((item, i) => cols[i % 2].appendChild(buildPhoto(item, from + i)));
   }
+  document.getElementById('canon').href = 'https://bunnyvid.my.id' + (buildUrl(tab, page) === location.pathname ? '/' : '/' + buildUrl(tab, page));
   document.title = 'BunnyVid' + (tab === 'foto' ? ', foto' : '') + (page > 1 ? ', halaman ' + page : '');
   statusEl.textContent = total > 1 ? 'Halaman ' + page + ' dari ' + total : '';
   renderPager(page, total);
@@ -365,6 +463,7 @@ function buildPhoto(item, index) {
   img.addEventListener('error', () => { b.classList.remove('loading'); b.classList.add('bad'); b.disabled = true; });
   img.src = item.url;
   b.append(img);
+  if (index < NEW_COUNT) b.append(makeNew());
   if (item.title) { const c = document.createElement('div'); c.className = 'cap'; c.textContent = item.title; b.append(c); }
   b.addEventListener('click', () => openLightbox(index, b));
   return b;
@@ -477,14 +576,25 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) stopC
 
 // Baca videos.txt: satu baris = satu link. Boleh "Judul | link". Baris berawalan # diabaikan.
 // Baris paling bawah = video terbaru = tampil paling atas.
+const STREAMABLE_RE = /https?:\/\/(?:www\.)?streamable\.com\/(?:[eos]\/)?([a-z0-9]+)/i;
+
 function parseTxt(text) {
   return text.split(/\r?\n/).map(l => l.trim()).filter(l => l && !l.startsWith('#')).map(l => {
+    // Streamable: bisa link biasa (streamable.com/abc12, /e/abc12) atau kode embed iframe lengkap
+    const sm = l.match(STREAMABLE_RE);
+    if (sm) {
+      const k = l.indexOf('|');
+      const left = k > -1 ? l.slice(0, k).trim() : '';
+      const it = { type: 'embed', id: sm[1], url: 'https://streamable.com/e/' + sm[1] };
+      if (left && !left.includes('<') && !/^https?:/i.test(left)) it.title = left;
+      return it;
+    }
     const k = l.indexOf('|');
     if (k > -1 && !/^https?:/i.test(l.slice(0, k).trim())) {
       return { title: l.slice(0, k).trim(), url: l.slice(k + 1).trim() };
     }
     return { url: l };
-  }).filter(v => /^https?:\/\//i.test(v.url) || /^[\w.\-\/%]+\.(jpe?g|png|gif|webp|avif|mp4|webm|mov)(\?.*)?$/i.test(v.url)); // link penuh, atau path file di repo
+  }).filter(v => v.type === 'embed' || /^https?:\/\//i.test(v.url) || /^[\w.\-\/%]+\.(jpe?g|png|gif|webp|avif|mp4|webm|mov)(\?.*)?$/i.test(v.url)); // link penuh, atau path file di repo
 }
 
 // link ganda dibuang, yang dipakai kemunculan paling bawah
@@ -510,10 +620,12 @@ async function loadVideos() {
 async function loadPhotos() {
   try {
     const r = await fetch('photos.txt', { cache: 'no-cache' });
-    if (r.ok) return parseTxt(await r.text());
+    if (r.ok) return parseTxt(await r.text()).filter(x => x.type !== 'embed');
   } catch (e) {}
   return [];
 }
+
+
 
 Promise.all([
   loadVideos().catch(() => { loadError.video = true; return []; }),

@@ -18,6 +18,35 @@ Website statis untuk nonton video pendek. Grid 2 kolom, 10 video per halaman, ad
 1. Upload semua file ke repo GitHub.
 2. Settings → Pages → branch `main`, folder `/ (root)`.
 
+## Pasang iklan
+Di `index.html` ada tiga tempat yang sengaja dikosongkan, kelihatan dari komentar `IKLAN ...`:
+- **IKLAN ATAS**: `<div class="ad" id="ad-top">`, di bawah tab, di atas grid.
+- **IKLAN BAWAH**: `<div class="ad" id="ad-bottom">`, di bawah tombol halaman.
+- **SCRIPT IKLAN GLOBAL**: untuk kode jenis Social Bar, Popunder, atau auto ads.
+
+Tempel kode dari ad network **di antara tag `<div ...></div>`** (untuk banner) atau di komentar global. Slot yang kosong tidak tampil sama sekali. Kalau jaringan iklan meminta `ads.txt`, buat file bernama `ads.txt` di root repo dan isi sesuai petunjuk mereka.
+
+Jangan klik iklan sendiri, itu bisa bikin akun iklan dibanned.
+
+## Video embed Streamable
+Selain link `.mp4` langsung, `videos.txt` juga menerima video Streamable. Tempel salah satu di **satu baris**:
+
+```
+https://streamable.com/e/nahv7n
+https://streamable.com/nahv7n
+Judul opsional | https://streamable.com/e/nahv7n
+<div ...><iframe ... src="https://streamable.com/e/nahv7n?" ...></iframe></div>
+```
+
+- Kode embed iframe lengkap juga boleh ditempel, yang dibaca hanya link Streamable di dalamnya.
+- Kartu tampil gelap dengan tombol putar. Player Streamable baru dimuat saat kartu dipencet, dan tombol X menutupnya.
+- Kontrol suara, layar penuh, dan progres memakai milik Streamable, bukan milik BunnyVid.
+- Boleh dicampur dengan video `.mp4` di file yang sama. Hanya Streamable yang didukung, dan hanya di tab Video.
+
+## Label Baru dan tulisan iklan
+- 5 konten teratas (paling bawah di `videos.txt` / `photos.txt`) otomatis diberi label **Baru**. Ubah jumlahnya lewat `NEW_COUNT` di script.
+- Tulisan "Mau pasang iklan di sini?" di paling bawah mengarah ke `https://t.me/rendy098`. Ubah username di `index.html` (cari `rendy098`).
+
 ## Tambah foto
 Sama seperti video: buka `photos.txt`, tempel link foto di **baris paling bawah**, lalu Commit.
 
