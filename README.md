@@ -35,6 +35,12 @@ Tab **Videox** untuk video yang durasinya panjang (2 menit atau lebih), supaya t
 - Tutup dengan tombol X, tombol Esc, atau ketuk area gelap. Tombol Sebelumnya/Berikutnya pindah antar video.
 - 10 video per halaman. Hanya link `.mp4` langsung yang didukung di tab ini.
 
+### Kalau video Videox lambat dimuat
+- Cuplikan kartu dimuat bergiliran (2 sekaligus), dan dibatalkan otomatis saat pop-up dibuka supaya pop-up tidak antre.
+- Di pop-up ada spinner, dan kalau lebih dari 10 detik muncul tombol **Coba lagi** dan **Buka langsung**. Kartu yang gagal dimuat bisa diketuk untuk dicoba ulang.
+- Mau paling hemat kuota: ubah `VIDEOX_PREVIEW` jadi `false` di script, kartu jadi tanpa cuplikan dan durasi.
+- Penyebab paling sering lambat adalah file/host-nya sendiri. Kompres video (720p) dan pastikan `faststart`, contoh: `ffmpeg -i input.mp4 -vf scale=-2:720 -c:v libx264 -crf 28 -preset medium -c:a aac -b:a 96k -movflags +faststart output.mp4`.
+
 ## Video embed Streamable
 Selain link `.mp4` langsung, `videos.txt` juga menerima video Streamable. Tempel salah satu di **satu baris**:
 

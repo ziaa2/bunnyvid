@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BunnyVid</title>
 <meta name="description" content="BunnyVid: tempat nonton video pendek dan lihat galeri foto anime. Gratis, ringan, dan nyaman dibuka lewat HP.">
+<link rel="preconnect" href="https://imgg.fr">
 <link rel="canonical" href="https://bunnyvid.my.id/" id="canon">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="BunnyVid">
@@ -166,11 +167,22 @@
   .vp svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .vp button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 
+
+  .item.big .err{pointer-events:none}
+  .item.big.nopv{background:linear-gradient(160deg,#2b2b33,#15151a)}
+  .vp-stage{position:relative}
+  .vp-state{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:12px;background:rgba(0,0,0,.5);text-align:center;font-size:14px;line-height:1.4;pointer-events:none}
+  .vp-state[hidden]{display:none}
+  .vp-spin{width:32px;height:32px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:vpspin .8s linear infinite}
+  @keyframes vpspin{to{transform:rotate(360deg)}}
+  .vp-acts{display:flex;gap:8px;pointer-events:auto}
+  .vp-acts button,.vp-acts a{height:36px;padding:0 14px;border-radius:8px;background:rgba(255,255,255,.2);color:#fff;font:inherit;font-size:14px;display:inline-flex;align-items:center;text-decoration:none;border:0;cursor:pointer}
+
   /* label Baru */
   .new{position:absolute;top:8px;left:8px;z-index:2;padding:0 8px;border-radius:999px;background:var(--brand);color:var(--brand-fg);font-size:11px;font-weight:700;line-height:20px;pointer-events:none}
   .item.bad .new,.ph.bad .new{display:none}
 
-  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}.vp-spin{animation-duration:3s}}
 </style>
 </head>
 <body>
@@ -244,7 +256,17 @@
       <span id="vpCount"></span>
       <button type="button" class="lb-x" id="vpClose" aria-label="Tutup"><svg viewBox="0 0 24 24"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg></button>
     </div>
-    <div class="vp-stage"><video id="vpVideo" controls playsinline preload="metadata"></video></div>
+    <div class="vp-stage">
+      <video id="vpVideo" controls playsinline preload="auto"></video>
+      <div class="vp-state" id="vpState" hidden>
+        <div class="vp-spin" id="vpSpin"></div>
+        <div id="vpMsg"></div>
+        <div class="vp-acts" id="vpActs" hidden>
+          <button type="button" id="vpRetry">Coba lagi</button>
+          <a id="vpOpen" href="#" target="_blank" rel="noopener">Buka langsung</a>
+        </div>
+      </div>
+    </div>
     <div class="vp-bar">
       <button type="button" class="vp-nav" id="vpPrev">Sebelumnya</button>
       <p id="vpCap"></p>
@@ -306,8 +328,51 @@ function loadSrc(v) {
 
 // lazy load: video baru dimuat saat mendekati layar
 const io = new IntersectionObserver(entries => {
-  entries.forEach(e => { if (e.isIntersecting) loadSrc(e.target); });
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    if (e.target.dataset.big) queuePreview(e.target); else loadSrc(e.target);
+  });
 }, { rootMargin: '300px' });
+
+// Preview kartu Videox dimuat bergiliran (maks PREVIEW_CONCURRENCY sekaligus), supaya server video
+// dan koneksi HP tidak kewalahan. Browser sendiri membatasi ~6 koneksi per server.
+const PREVIEW_CONCURRENCY = 2;
+const VIDEOX_PREVIEW = true;   // false = kartu Videox tanpa cuplikan/durasi (paling hemat kuota)
+let previewQueue = [], previewActive = 0, previewPaused = false, previewEpoch = 0;
+function queuePreview(v) { v.dataset.want = '1'; previewQueue.push(v); pumpPreviews(); }
+function pumpPreviews() {
+  while (!previewPaused && previewActive < PREVIEW_CONCURRENCY && previewQueue.length) {
+    const v = previewQueue.shift();
+    if (!v.isConnected || v.getAttribute('src')) continue;
+    previewActive++;
+    const epoch = previewEpoch;
+    let done = false;
+    const finish = () => {
+      if (done) return; done = true; clearTimeout(timer);
+      if (epoch === previewEpoch) { previewActive--; pumpPreviews(); }
+    };
+    v.addEventListener('loadedmetadata', finish, { once: true });
+    v.addEventListener('error', finish, { once: true });
+    const timer = setTimeout(finish, 12000); // kelamaan: lepas antrean, unduhan tetap lanjut
+    loadSrc(v);
+  }
+}
+function resetPreviews() { previewQueue = []; previewActive = 0; previewEpoch++; }
+// saat pop-up dibuka, batalkan preview yang belum selesai agar pop-up tidak antre di belakangnya
+function pausePreviews() {
+  previewPaused = true;
+  grid.querySelectorAll('.item.big video').forEach(v => {
+    if (v.getAttribute('src') && v.readyState < 1) { v.removeAttribute('src'); v.load(); }
+  });
+}
+function resumePreviews() {
+  previewPaused = false;
+  previewActive = 0; previewEpoch++;
+  grid.querySelectorAll('.item.big video[data-want]').forEach(v => {
+    if (!v.getAttribute('src') && !v.closest('.bad')) previewQueue.push(v);
+  });
+  pumpPreviews();
+}
 
 // video yang sedang diputar otomatis berhenti kalau keluar layar
 const ioPlay = new IntersectionObserver(entries => {
@@ -449,6 +514,7 @@ function render() {
   stopCurrent();
   closeLightbox(false);
   closeVp(false);
+  resetPreviews();
   io.disconnect(); ioPlay.disconnect();
   tab = readTab();
   tabBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tab === tab)));
@@ -479,7 +545,7 @@ function render() {
     slice.forEach((item, i) => {
       const { el, v } = buildBig(item, from + i, from + i < NEW_COUNT);
       grid.appendChild(el);
-      io.observe(v);
+      if (VIDEOX_PREVIEW) io.observe(v);
     });
   } else {
     // 2 kolom diisi selang-seling (kiri, kanan, kiri, ...) supaya yang terbaru ada di atas kedua kolom
@@ -518,20 +584,47 @@ function buildBig(item, index, isNew) {
   const p = document.createElement('div'); p.className = 'p';
   const d = document.createElement('div'); d.className = 'dur';
   const err = document.createElement('div'); err.className = 'err';
-  err.textContent = 'Video tidak bisa dimuat. Cek link-nya di videox.txt.';
+  err.textContent = 'Video tidak bisa dimuat. Ketuk untuk coba lagi.';
   el.append(v, t, p, d, err, hit);
+  v.dataset.big = '1';
+  if (!VIDEOX_PREVIEW) el.classList.add('nopv');
   if (isNew) el.append(makeNew());
   v.addEventListener('loadedmetadata', () => { d.textContent = fmtDur(v.duration); });
   v.addEventListener('error', () => { if (v.getAttribute('src')) el.classList.add('bad'); });
-  hit.addEventListener('click', () => { if (!el.classList.contains('bad')) openVp(index, hit); });
+  hit.addEventListener('click', () => {
+    if (el.classList.contains('bad')) { // gagal sebelumnya: ketuk = coba lagi
+      el.classList.remove('bad'); v.removeAttribute('src'); queuePreview(v);
+      return;
+    }
+    openVp(index, hit);
+  });
   return { el, v };
 }
 
-let vpIndex = -1, vpOpener = null;
+let vpIndex = -1, vpOpener = null, vpTimer = 0;
+const vpState = document.getElementById('vpState'), vpSpin = document.getElementById('vpSpin'), vpMsg = document.getElementById('vpMsg');
+const vpActs = document.getElementById('vpActs'), vpRetry = document.getElementById('vpRetry'), vpOpen = document.getElementById('vpOpen');
+// kind: 'loading' (spinner), 'slow' (spinner + tombol), 'error' (pesan + tombol), '' (sembunyi)
+function setVpState(kind) {
+  clearTimeout(vpTimer);
+  vpState.hidden = !kind;
+  vpSpin.hidden = kind === 'error';
+  vpActs.hidden = kind !== 'slow' && kind !== 'error';
+  vpMsg.textContent = kind === 'slow' ? 'Masih memuat. Server video sedang lambat.'
+    : kind === 'error' ? 'Video tidak bisa dimuat. Cek link-nya di videox.txt.' : '';
+  if (kind === 'loading') vpTimer = setTimeout(() => setVpState('slow'), 10000);
+}
+vpVideo.addEventListener('waiting', () => { if (!vp.hidden) setVpState('loading'); });
+vpVideo.addEventListener('canplay', () => setVpState(''));
+vpVideo.addEventListener('playing', () => setVpState(''));
+vpRetry.addEventListener('click', () => { setVpState('loading'); vpVideo.load(); vpVideo.play().catch(() => {}); });
+
 function showVp(i) {
   const list = lists.videox;
   vpIndex = Math.min(Math.max(i, 0), list.length - 1);
   const it = list[vpIndex];
+  setVpState('loading');
+  vpOpen.href = it.url;
   vpVideo.src = it.url;
   vpVideo.play().catch(() => {});
   vpCap.textContent = it.title || '';
@@ -541,6 +634,7 @@ function showVp(i) {
 }
 function openVp(i, opener) {
   stopCurrent();
+  pausePreviews();
   vpOpener = opener;
   vp.hidden = false;
   document.body.style.overflow = 'hidden';
@@ -552,10 +646,12 @@ function closeVp(sync = true) {
   vpVideo.pause();
   vpVideo.removeAttribute('src');
   vpVideo.load(); // hentikan unduhan
+  setVpState('');
   vp.hidden = true;
   document.body.style.overflow = '';
   const idx = vpIndex, opener = vpOpener;
   vpOpener = null;
+  resumePreviews();
   // kalau pindah ke video di halaman lain, ikut pindah ke halamannya
   if (sync && idx >= 0) {
     const p = Math.floor(idx / PER.videox) + 1;
@@ -567,9 +663,7 @@ vpClose.addEventListener('click', () => closeVp());
 vpPrev.addEventListener('click', () => showVp(vpIndex - 1));
 vpNext.addEventListener('click', () => showVp(vpIndex + 1));
 vp.addEventListener('click', e => { if (e.target === vp) closeVp(); });
-vpVideo.addEventListener('error', () => {
-  if (vpVideo.getAttribute('src')) vpCap.textContent = 'Video tidak bisa dimuat. Cek link-nya di videox.txt.';
-});
+vpVideo.addEventListener('error', () => { if (vpVideo.getAttribute('src')) setVpState('error'); });
 
 function buildPhoto(item, index) {
   const b = document.createElement('button');
